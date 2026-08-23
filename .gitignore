@@ -1,0 +1,11 @@
+.env
+capital.txt
+live_trade.json
+demo_results.json
+__pycache__/
+*.pyc
+.Ds_Store
+*,log
+
+logs/
+scalper_pro_backup_*.py

@@ -510,20 +510,24 @@ def run_bot():
         news_score, high_impact, news_sentiment = analyze_news()
         vix = get_vix(obj)
 
-        best_score = 0
-        best_signal = best_index = best_ltp = None
-
+        # Scan all indices and collect valid signals
+        valid_signals = []
         for index in indices:
             score, signal, ltp = calculate_signal_score(
                 obj, index, news_score, news_sentiment, vix)
-            if signal and score > best_score:
-                best_score = score; best_signal = signal
-                best_index = index; best_ltp = ltp
+            if signal and score >= MIN_SIGNAL_SCORE:
+                valid_signals.append((score, index, signal, ltp))
+                print(f"   ✅ {index} signal found! Score:{score}/10")
 
-        if not best_signal or best_score < MIN_SIGNAL_SCORE:
-            print(f"\n⏳ Score {best_score}/10 — below min {MIN_SIGNAL_SCORE}. Waiting {SCAN_INTERVAL}s...")
+        if not valid_signals:
+            print(f"\n⏳ No signals found. Waiting {SCAN_INTERVAL}s...")
             time.sleep(SCAN_INTERVAL)
             continue
+
+        # Sort by score — highest first
+        valid_signals.sort(reverse=True)
+        best_score, best_index, best_signal, best_ltp = valid_signals[0]
+        print(f"\n🎯 Best signal: {best_index} {best_signal} Score:{best_score}/10")
 
         nfo    = INDEX_CONFIG[best_index]["nfo"]
         expiry = get_nearest_expiry(obj, best_index)

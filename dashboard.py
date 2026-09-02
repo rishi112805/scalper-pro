@@ -417,13 +417,153 @@ function showToast(m,t){var el=document.getElementById("toast");el.textContent=m
 function showPage(n,el){document.querySelectorAll(".pbtn").forEach(function(b){b.classList.remove("act");});document.querySelectorAll(".dash").forEach(function(d){d.classList.remove("act");});el.classList.add("act");document.getElementById("dash-"+n).classList.add("act");}
 function showTab(d,n,el){document.querySelectorAll("#tabs-"+d+" .tab").forEach(function(t){t.classList.remove("ademo","alive");});document.querySelectorAll("#dash-"+d+" .tp").forEach(function(p){p.classList.remove("act");});el.classList.add(d==="demo"?"ademo":"alive");document.getElementById(d+"-"+n).classList.add("act");}
 function squareOff(){fetch("/api/square_off",{method:"POST"}).then(function(r){return r.json();}).then(function(d){showToast(d.success?"Square off sent!":"Error: "+d.message,d.success?"ok":"err");}).catch(function(){showToast("Failed","err");});}
-function updateLiveTrade(){return fetch("/api/live_trade").then(function(r){return r.json();}).then(function(d){["d","l"].forEach(function(p){var card=document.getElementById(p+"-lc"),content=document.getElementById(p+"-lcontent"),badge=document.getElementById(p+"-lb"),btn=document.getElementById(p+"-sqb");if(!d.active){card.className="lc";badge.style.display="none";btn.style.display="none";content.innerHTML="<div class=\"nt\">&#x1F4CA; No active trade</div>";return;}card.className="lc "+(p==="d"?"da":"la");badge.style.display="inline-flex";btn.style.display="flex";var pnl=d.pnl||0,pc=pnl>=0?"gv":"rv",pp=(d.entry&&d.qty)?((pnl/(d.entry*d.qty))*100).toFixed(2):"0.00",prog=(d.target&&d.sl)?Math.min(100,Math.max(0,((d.ltp-d.sl)/(d.target-d.sl))*100)):0,sc=p==="d"?"sd":"sl",pb=p==="d"?"pbfd":"pbfl";content.innerHTML="<div class=\"lg\"><div class=\"lf\"><label>Symbol</label><div class=\"lv "+sc+"\">"+d.symbol+"</div></div><div class=\"lf\"><label>Entry</label><div class=\"lv\">Rs."+d.entry+"</div></div><div class=\"lf\"><label>LTP</label><div class=\"lv ltp\">Rs."+d.ltp+"</div></div><div class=\"lf\"><label>P&L</label><div class=\"lv "+pc+"\">"+( pnl>=0?"+":"")+"Rs."+pnl.toFixed(2)+" ("+pp+"%)</div></div><div class=\"lf\"><label>Target</label><div class=\"lv tv\">Rs."+d.target+"</div></div><div class=\"lf\"><label>Stop loss</label><div class=\"lv sv\">Rs."+d.sl+"</div></div><div class=\"lf\"><label>Qty</label><div class=\"lv\">"+d.qty+"</div></div></div><div class=\"pbl\"><span>SL Rs."+d.sl+"</span><span>Progress: "+prog.toFixed(0)+"%</span><span>Target Rs."+d.target+"</span></div><div class=\"pbb\"><div class=\""+pb+"\" style=\"width:"+prog+"%\"></div></div>";});});}
+function updateLiveTrade(){
+  return fetch("/api/live_trade").then(function(r){return r.json();}).then(function(d){
+    ["d","l"].forEach(function(p){
+      var card=document.getElementById(p+"-lc");
+      var cnt=document.getElementById(p+"-lcontent");
+      var badge=document.getElementById(p+"-lb");
+      var btn=document.getElementById(p+"-sqb");
+      if(!d.active){
+        card.className="lc";
+        badge.style.display="none";
+        btn.style.display="none";
+        cnt.innerHTML="<div style=\'text-align:center;padding:24px;color:#64748b;font-size:12px\'>No active trade</div>";
+        return;
+      }
+      card.className="lc "+(p==="d"?"da":"la");
+      badge.style.display="inline-flex";
+      btn.style.display="flex";
+      var pnl=d.pnl||0;
+      var pc=pnl>=0?"gv":"rv";
+      var pp=(d.entry&&d.qty)?((pnl/(d.entry*d.qty))*100).toFixed(2):"0.00";
+      var prog=(d.target&&d.sl)?Math.min(100,Math.max(0,((d.ltp-d.sl)/(d.target-d.sl))*100)):0;
+      var sc=p==="d"?"sd":"sl";
+      var pb=p==="d"?"pbfd":"pbfl";
+      var rows=[
+        ["Symbol","<span style=\'color:"+(p==="d"?"#3b82f6":"#22c55e")+";font-size:11px;font-family:monospace\'>"+d.symbol+"</span>"],
+        ["Entry","<span style=\'font-family:monospace\'>Rs."+d.entry+"</span>"],
+        ["LTP","<span style=\'font-family:monospace;font-size:17px;color:#06b6d4\'>Rs."+d.ltp+"</span>"],
+        ["P&L","<span style=\'font-family:monospace;color:"+(pnl>=0?"#22c55e":"#ef4444")+"\'>"+(pnl>=0?"+":"")+"Rs."+pnl.toFixed(2)+" ("+pp+"%)</span>"],
+        ["Target","<span style=\'font-family:monospace;color:#22c55e\'>Rs."+d.target+"</span>"],
+        ["Stop loss","<span style=\'font-family:monospace;color:#ef4444\'>Rs."+d.sl+"</span>"],
+        ["Qty","<span style=\'font-family:monospace\'>"+d.qty+"</span>"]
+      ];
+      var gridHTML="<div style=\'display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 1fr 1fr 1fr;gap:14px;margin-bottom:12px\'>";
+      rows.forEach(function(r){
+        gridHTML+="<div><div style=\'font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:4px\'>"+r[0]+"</div>"+r[1]+"</div>";
+      });
+      gridHTML+="</div>";
+      var pbHTML="<div style=\'display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-bottom:4px;font-family:monospace\'><span>SL Rs."+d.sl+"</span><span>Progress: "+prog.toFixed(0)+"%</span><span>Target Rs."+d.target+"</span></div><div style=\'background:#080c14;border-radius:4px;height:5px;overflow:hidden\'><div class=\'"+pb+"' style=\'width:"+prog+"%\'></div></div>";
+      cnt.innerHTML=gridHTML+pbHTML;
+    });
+  });
+}
 function loadDemoSummary(){return fetch("/api/demo/summary").then(function(r){return r.json();}).then(function(d){document.getElementById("ds").textContent=(d.demo_running?"● Demo: Running":"● Demo: Stopped");document.getElementById("ds").className="pill "+(d.demo_running?"demo-r":"live-s");document.getElementById("bs").textContent=(d.bot_running?"● Live: Running":"● Live: Stopped");document.getElementById("bs").className="pill "+(d.bot_running?"live-r":"live-s");document.getElementById("d-st1").textContent=(d.demo_running?"● Running":"● Stopped");document.getElementById("d-st1").className="pill "+(d.demo_running?"live-r":"live-s");var ch=d.current_capital-10000,cc=document.getElementById("d-cc");cc.textContent="Rs."+d.current_capital.toLocaleString("en-IN",{minimumFractionDigits:2});cc.className="kv "+(ch>=0?"gv":"rv");document.getElementById("d-ccs").textContent=(ch>=0?"+":"")+"Rs."+ch.toFixed(0)+" from start";var pp=document.getElementById("d-pnl");pp.textContent=(d.total_pnl>=0?"+":"")+"Rs."+Math.abs(d.total_pnl).toFixed(2);pp.className="kv "+(d.total_pnl>=0?"gv":"rv");document.getElementById("d-pnls").textContent=((d.total_pnl/10000)*100).toFixed(1)+"% return";document.getElementById("d-tt").textContent=d.total_trades;document.getElementById("d-wl").textContent="W:"+d.winning_trades+" L:"+d.losing_trades;document.getElementById("d-wc").textContent=d.winning_trades;document.getElementById("d-lc2").textContent=d.losing_trades;var ac=document.getElementById("d-ac");ac.textContent=d.accuracy+"%";ac.className="kv "+(d.accuracy>=60?"gv":d.accuracy>=40?"wv":"rv");document.getElementById("d-lu").textContent="Last updated: "+new Date().toLocaleTimeString();});}
 function loadLiveSummary(){return fetch("/api/live/summary").then(function(r){return r.json();}).then(function(d){document.getElementById("l-st1").textContent=(d.bot_running?"● Running":"● Stopped");document.getElementById("l-st1").className="pill "+(d.bot_running?"live-r":"live-s");var ch=d.current_capital-5000,cc=document.getElementById("l-cc");cc.textContent="Rs."+d.current_capital.toLocaleString("en-IN",{minimumFractionDigits:2});cc.className="kv "+(ch>=0?"gv":"rv");document.getElementById("l-ccs").textContent=(ch>=0?"+":"")+"Rs."+ch.toFixed(0)+" from start";var pp=document.getElementById("l-pnl");pp.textContent=(d.total_pnl>=0?"+":"")+"Rs."+Math.abs(d.total_pnl).toFixed(2);pp.className="kv "+(d.total_pnl>=0?"gv":"rv");document.getElementById("l-pnls").textContent=((d.total_pnl/5000)*100).toFixed(1)+"% return";document.getElementById("l-tt").textContent=d.total_trades;document.getElementById("l-wl").textContent="W:"+d.winning_trades+" L:"+d.losing_trades;document.getElementById("l-wc").textContent=d.winning_trades;document.getElementById("l-lc2").textContent=d.losing_trades;var ac=document.getElementById("l-ac");ac.textContent=d.accuracy+"%";ac.className="kv "+(d.accuracy>=60?"gv":d.accuracy>=40?"wv":"rv");});}
 function loadDemoAnalytics(){return fetch("/api/demo/capital_growth").then(function(r){return r.json();}).then(function(d){var labels=d.map(function(x){return x.trade===0?"S":"T"+x.trade;}),values=d.map(function(x){return x.capital;});if(dCgChart)dCgChart.destroy();dCgChart=new Chart(document.getElementById("d-cgc"),{type:"line",data:{labels:labels,datasets:[{data:values,borderColor:"#3b82f6",backgroundColor:"rgba(59,130,246,0.08)",borderWidth:2,pointBackgroundColor:values.map(function(v){return v>=10000?"#22c55e":"#ef4444";}),pointRadius:3,fill:true,tension:0.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#475569",font:{size:9}},grid:{color:"#0d1421"}},y:{ticks:{color:"#475569",font:{size:9}},grid:{color:"#0d1421"}}}}});document.getElementById("d-cgl").innerHTML="<span>Start</span><span>Mid</span><span>T"+d.length+"</span>";}).then(function(){return fetch("/api/demo/summary").then(function(r){return r.json();}).then(function(s){if(dWlChart)dWlChart.destroy();dWlChart=new Chart(document.getElementById("d-wlc"),{type:"doughnut",data:{labels:["Wins","Losses"],datasets:[{data:[s.winning_trades||0,s.losing_trades||0],backgroundColor:["rgba(59,130,246,0.8)","rgba(239,68,68,0.8)"],borderColor:["#3b82f6","#ef4444"],borderWidth:2,hoverOffset:4}]},options:{cutout:"65%",plugins:{legend:{display:false}}}});});});}
 function loadLiveAnalytics(){return fetch("/api/live/capital_growth").then(function(r){return r.json();}).then(function(d){if(lCgChart)lCgChart.destroy();if(d.length>1){var labels=d.map(function(x){return x.trade===0?"S":"T"+x.trade;}),values=d.map(function(x){return x.capital;});lCgChart=new Chart(document.getElementById("l-cgc"),{type:"line",data:{labels:labels,datasets:[{data:values,borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,0.08)",borderWidth:2,pointBackgroundColor:values.map(function(v){return v>=5000?"#22c55e":"#ef4444";}),pointRadius:3,fill:true,tension:0.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#475569",font:{size:9}},grid:{color:"#0d1421"}},y:{ticks:{color:"#475569",font:{size:9}},grid:{color:"#0d1421"}}}}});}}).then(function(){return fetch("/api/live/summary").then(function(r){return r.json();}).then(function(s){if(lWlChart)lWlChart.destroy();lWlChart=new Chart(document.getElementById("l-wlc"),{type:"doughnut",data:{labels:["Wins","Losses"],datasets:[{data:[s.winning_trades||0,s.losing_trades||0],backgroundColor:["rgba(34,197,94,0.8)","rgba(239,68,68,0.8)"],borderColor:["#22c55e","#ef4444"],borderWidth:2,hoverOffset:4}]},options:{cutout:"65%",plugins:{legend:{display:false}}}});});});}
-function loadDailyCommon(api,bcId,xlId,dtId,tpId,tsId,bdId,bdsId,wdId,wdsId,recId){return fetch(api).then(function(r){return r.json();}).then(function(d){var bc=document.getElementById(bcId),xl=document.getElementById(xlId);if(!d.length){bc.innerHTML="<span style='color:#64748b;font-size:12px'>No data yet</span>";return;}var max=Math.max.apply(null,d.map(function(x){return Math.abs(x.pnl);}));bc.innerHTML=d.map(function(x){var h=Math.max(4,Math.round((Math.abs(x.pnl)/max)*120));return"<div class=\"bar\" style=\"height:"+h+"px;background:"+(x.pnl>=0?"#3b82f6":"#ef4444")+";opacity:0.85\"></div>";}).join("");xl.innerHTML=d.map(function(x){return"<span>"+x.date.slice(5)+"</span>";}).join("");if(document.getElementById(dtId))document.getElementById(dtId).innerHTML=d.slice().reverse().map(function(x){return"<tr><td style='color:#64748b;font-size:11px'>"+x.date+"</td><td>"+x.trades+"</td><td class='pp'>"+x.wins+"</td><td class='pn'>"+x.losses+"</td><td class='"+(x.pnl>=0?"pp":"pn")+"'>"+(x.pnl>=0?"+":"")+"Rs."+Math.abs(x.pnl).toFixed(0)+"</td><td style='color:"+(x.accuracy>=60?"#22c55e":x.accuracy>=40?"#f59e0b":"#ef4444")+"'>"+x.accuracy+"%</td></tr>";}).join("");var today=d.find(function(x){return x.date===new Date().toISOString().slice(0,10);});var tEl=document.getElementById(tpId);if(today){tEl.textContent=(today.pnl>=0?"+":"")+"Rs."+Math.abs(today.pnl).toFixed(0);tEl.className="kv "+(today.pnl>=0?"gv":"rv");document.getElementById(tsId).textContent=today.trades+" trades today";}else{tEl.textContent="Rs.0";document.getElementById(tsId).textContent="No trades today";}if(d.length&&document.getElementById(bdId)){var best=d.reduce(function(a,b){return a.pnl>b.pnl?a:b;},d[0]),worst=d.reduce(function(a,b){return a.pnl<b.pnl?a:b;},d[0]);document.getElementById(bdId).textContent=(best.pnl>=0?"+":"")+"Rs."+Math.abs(best.pnl).toFixed(0);document.getElementById(bdsId).textContent=best.date+" — "+best.accuracy+"%";document.getElementById(wdId).textContent=(worst.pnl>=0?"+":"")+"Rs."+Math.abs(worst.pnl).toFixed(0);document.getElementById(wdsId).textContent=worst.date+" — "+worst.accuracy+"%";}});}
-function loadHistoryCommon(api,tbId,tcId,recId,symColor){return fetch(api).then(function(r){return r.json();}).then(function(trades){document.getElementById(tcId).textContent=trades.length+" trades";var tbody=document.getElementById(tbId);if(!trades.length){tbody.innerHTML="<tr><td colspan='8' style='text-align:center;color:#64748b;padding:20px'>No trades yet</td></tr>";return;}tbody.innerHTML=trades.slice().reverse().map(function(t,i){return"<tr><td style='color:#64748b'>"+(trades.length-i)+"</td><td style='color:#64748b;font-size:11px'>"+t.date+"</td><td style='color:"+symColor+";font-size:11px'>"+(t.symbol||"")+"</td><td><span class='tag "+(t.signal||"").toLowerCase()+"'>"+(t.signal||"")+"</span></td><td style='color:#f59e0b'>"+(t.score||"-")+"/10</td><td>Rs."+(t.entry||0)+"</td><td><span class='tag "+(t.exit||"").toLowerCase()+"'>"+(t.exit||"")+"</span></td><td class='"+(t.pnl>=0?"pp":"pn")+"'>"+(t.pnl>=0?"+":"")+"Rs."+Math.abs(t.pnl||0).toFixed(2)+"</td></tr>";}).join("");if(recId&&document.getElementById(recId))document.getElementById(recId).innerHTML=trades.slice(-5).reverse().map(function(t){return"<tr><td style='color:#64748b;font-size:11px'>"+t.date.slice(5)+"</td><td>1</td><td class='"+(t.pnl>=0?"pp":"pn")+"'>"+(t.pnl>=0?"+":"")+"Rs."+Math.abs(t.pnl).toFixed(0)+"</td><td>-</td></tr>";}).join("");var avg=trades.reduce(function(s,t){return s+(t.pnl||0);},0)/(trades.length||1);var avgEl=document.getElementById(tbId==="d-tb"?"d-avg":"l-avg");if(avgEl){avgEl.textContent=(avg>=0?"+":"")+"Rs."+Math.abs(avg).toFixed(2);avgEl.className="kv "+(avg>=0?"gv":"rv");var avgsEl=document.getElementById(tbId==="d-tb"?"d-avgs":"l-avgs");if(avgsEl)avgsEl.textContent="Across "+trades.length+" trades";}});}
+function loadDailyCommon(api,bcId,xlId,dtId,tpId,tsId,bdId,bdsId,wdId,wdsId,recId){
+  return fetch(api).then(function(r){return r.json();}).then(function(d){
+    var bc=document.getElementById(bcId);
+    var xl=document.getElementById(xlId);
+    if(!d.length){
+      bc.innerHTML="<span style='color:#64748b;font-size:12px'>No data yet</span>";
+      return;
+    }
+    var max=Math.max.apply(null,d.map(function(x){return Math.abs(x.pnl);}));
+    var bars="";
+    d.forEach(function(x){
+      var h=Math.max(4,Math.round((Math.abs(x.pnl)/max)*120));
+      var col=x.pnl>=0?"#3b82f6":"#ef4444";
+      bars+="<div class='bar' style='height:"+h+"px;background:"+col+";opacity:0.85' title='"+x.date+": Rs."+x.pnl+"'></div>";
+    });
+    bc.innerHTML=bars;
+    var xlabels="";
+    d.forEach(function(x){xlabels+="<span>"+x.date.slice(5)+"</span>";});
+    xl.innerHTML=xlabels;
+    if(document.getElementById(dtId)){
+      var rows="";
+      d.slice().reverse().forEach(function(x){
+        rows+="<tr>";
+        rows+="<td style='color:#64748b;font-size:11px'>"+x.date+"</td>";
+        rows+="<td>"+x.trades+"</td>";
+        rows+="<td class='pp'>"+x.wins+"</td>";
+        rows+="<td class='pn'>"+x.losses+"</td>";
+        rows+="<td class='"+(x.pnl>=0?"pp":"pn")+"'>"+(x.pnl>=0?"+":"")+"Rs."+Math.abs(x.pnl).toFixed(0)+"</td>";
+        rows+="<td style='color:"+(x.accuracy>=60?"#22c55e":x.accuracy>=40?"#f59e0b":"#ef4444")+"'>"+x.accuracy+"%</td>";
+        rows+="</tr>";
+      });
+      document.getElementById(dtId).innerHTML=rows;
+    }
+    var today=d.find(function(x){return x.date===new Date().toISOString().slice(0,10);});
+    var tEl=document.getElementById(tpId);
+    if(today&&tEl){
+      tEl.textContent=(today.pnl>=0?"+":"")+"Rs."+Math.abs(today.pnl).toFixed(0);
+      tEl.className="kv "+(today.pnl>=0?"gv":"rv");
+      document.getElementById(tsId).textContent=today.trades+" trades today";
+    } else if(tEl){
+      tEl.textContent="Rs.0";
+      document.getElementById(tsId).textContent="No trades today";
+    }
+    if(d.length&&bdId&&document.getElementById(bdId)){
+      var best=d.reduce(function(a,b){return a.pnl>b.pnl?a:b;},d[0]);
+      var worst=d.reduce(function(a,b){return a.pnl<b.pnl?a:b;},d[0]);
+      document.getElementById(bdId).textContent=(best.pnl>=0?"+":"")+"Rs."+Math.abs(best.pnl).toFixed(0);
+      document.getElementById(bdsId).textContent=best.date+" - "+best.accuracy+"%";
+      document.getElementById(wdId).textContent=(worst.pnl>=0?"+":"")+"Rs."+Math.abs(worst.pnl).toFixed(0);
+      document.getElementById(wdsId).textContent=worst.date+" - "+worst.accuracy+"%";
+    }
+  });
+}
+function loadHistoryCommon(api,tbId,tcId,recId,symColor){
+  return fetch(api).then(function(r){return r.json();}).then(function(trades){
+    document.getElementById(tcId).textContent=trades.length+" trades";
+    var tbody=document.getElementById(tbId);
+    if(!trades.length){
+      tbody.innerHTML="<tr><td colspan='8' style='text-align:center;color:#64748b;padding:20px'>No trades yet</td></tr>";
+      return;
+    }
+    var rows="";
+    trades.slice().reverse().forEach(function(t,i){
+      var pnlCls=t.pnl>=0?"pp":"pn";
+      var pnlStr=(t.pnl>=0?"+":"")+"Rs."+Math.abs(t.pnl||0).toFixed(2);
+      rows+="<tr>";
+      rows+="<td style='color:#64748b'>"+(trades.length-i)+"</td>";
+      rows+="<td style='color:#64748b;font-size:11px'>"+(t.date||"")+"</td>";
+      rows+="<td style='color:"+symColor+";font-size:11px'>"+(t.symbol||"")+"</td>";
+      rows+="<td><span class='tag "+(t.signal||"").toLowerCase()+"'>"+(t.signal||"")+"</span></td>";
+      rows+="<td style='color:#f59e0b'>"+(t.score||"-")+"/10</td>";
+      rows+="<td>Rs."+(t.entry||0)+"</td>";
+      rows+="<td><span class='tag "+(t.exit||"").toLowerCase()+"'>"+(t.exit||"")+"</span></td>";
+      rows+="<td class='"+pnlCls+"'>"+pnlStr+"</td>";
+      rows+="</tr>";
+    });
+    tbody.innerHTML=rows;
+    if(recId&&document.getElementById(recId)){
+      var recRows="";
+      trades.slice(-5).reverse().forEach(function(t){
+        recRows+="<tr>";
+        recRows+="<td style='color:#64748b;font-size:11px'>"+(t.date||"").slice(5)+"</td>";
+        recRows+="<td>1</td>";
+        recRows+="<td class='"+(t.pnl>=0?"pp":"pn")+"'>"+(t.pnl>=0?"+":"")+"Rs."+Math.abs(t.pnl||0).toFixed(0)+"</td>";
+        recRows+="<td>-</td>";
+        recRows+="</tr>";
+      });
+      document.getElementById(recId).innerHTML=recRows;
+    }
+    var avg=trades.reduce(function(s,t){return s+(t.pnl||0);},0)/(trades.length||1);
+    var avgId=tbId==="d-tb"?"d-avg":"l-avg";
+    var avgsId=tbId==="d-tb"?"d-avgs":"l-avgs";
+    var avgEl=document.getElementById(avgId);
+    if(avgEl){
+      avgEl.textContent=(avg>=0?"+":"")+"Rs."+Math.abs(avg).toFixed(2);
+      avgEl.className="kv "+(avg>=0?"gv":"rv");
+    }
+    var avgsEl=document.getElementById(avgsId);
+    if(avgsEl)avgsEl.textContent="Across "+trades.length+" trades";
+  });
+}
 function loadAll(){Promise.all([loadDemoSummary(),loadLiveSummary(),loadDemoAnalytics(),loadLiveAnalytics(),loadDailyCommon("/api/demo/daily","d-bcc","d-bxl","d-dt","d-tp","d-ts","d-bd","d-bds","d-wd","d-wds","d-rec"),loadDailyCommon("/api/live/daily","l-bcc","l-bxl","l-dt","l-tp","l-ts","l-bd","l-bds","l-wd","l-wds",null),loadHistoryCommon("/api/demo/trades","d-tb","d-tc","d-rec","#3b82f6"),loadHistoryCommon("/api/live/trades","l-tb","l-tc",null,"#22c55e"),updateLiveTrade()]).catch(function(e){console.error("Error:",e);});}
 loadAll();
 setInterval(loadAll,30000);
